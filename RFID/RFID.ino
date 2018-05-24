@@ -32,7 +32,7 @@
 
 #define SS_PIN 10
 #define RST_PIN 9
-#define led_PIN 3
+#define led_PIN 8
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.
 
 void setup() {
