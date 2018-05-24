@@ -13,3 +13,5 @@ Second Library to Add to Arduino IDE:
 	Select the library you just downloaded
 
 These libraries are needed for the RFID module and the A2D converter
+
+Example project weight: https://www.hackster.io/MOHAN_CHANDALURU/hx711-load-cell-amplifier-interface-with-arduino-fa47f3
