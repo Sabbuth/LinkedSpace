@@ -1,5 +1,7 @@
 # LinkedSpace
 
+Author: Mischa, Patrick
+
 Library for the Analog to Digital converter https://github.com/compugician/HX711-multi
 Library to Add to Arduino IDE:
 	Open Arduino IDE
