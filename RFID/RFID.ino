@@ -1,3 +1,5 @@
+
+
 /*
  * MFRC522 - Library to use ARDUINO RFID MODULE KIT 13.56 MHZ WITH TAGS SPI W AND R BY COOQROBOT.
  * The library file MFRC522.h has a wealth of useful info. Please read it.
@@ -29,13 +31,18 @@
 
 #include <SPI.h>
 #include <MFRC522.h>
+#include <LiquidCrystal.h>
+
 
 #define SS_PIN 10
 #define RST_PIN 9
 #define led_PIN 8
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.
+LiquidCrystal lcd(1, 2, 4, 5, 6, 7); // Creates an LC object. Parameters: (rs, enable, d4, d5, d6, d7) 
 
 void setup() {
+  lcd.begin(16,1);// Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display }
+  lcd.write("hello world!");
   Serial.begin(9600); // Initialize serial communications with the PC
   SPI.begin();      // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
@@ -44,6 +51,8 @@ void setup() {
 }
 
 void loop() {
+  
+
   // Look for new cards
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
     return;
@@ -60,5 +69,39 @@ void loop() {
   Serial.println("Been here, done this...");
   
   // Dump debug info about the card. PICC_HaltA() is automatically called.
- // mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
- }
+ mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+
+
+if (mfrc522.uid.uidByte[0] == 0x04 &&
+     mfrc522.uid.uidByte[1] == 0x6D &&
+     mfrc522.uid.uidByte[2] == 0xF7 &&
+     mfrc522.uid.uidByte[3] == 0xF2 &&
+     mfrc522.uid.uidByte[4] == 0x46 &&
+     mfrc522.uid.uidByte[5] == 0x4B &&
+     mfrc522.uid.uidByte[6] == 0x80
+     ) {
+
+Serial.println("Hi Mischa");
+lcd.clear();
+lcd.blink();
+delay(500);
+lcd.print("Hi Mischa");
+delay(500);
+  }
+
+if (mfrc522.uid.uidByte[0] == 0x56 &&
+     mfrc522.uid.uidByte[1] == 0x24 &&
+     mfrc522.uid.uidByte[2] == 0xC8 &&
+     mfrc522.uid.uidByte[3] == 0x3B 
+   ) {
+Serial.println("Hi Alex");
+lcd.clear();
+lcd.blink();
+delay(500);
+lcd.write("Hi Alex");
+delay(500);
+  }
+ 
+}
+
+
