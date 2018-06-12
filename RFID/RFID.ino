@@ -34,15 +34,15 @@
 #include <LiquidCrystal.h>
 
 
-#define SS_PIN 10
-#define RST_PIN 9
-#define led_PIN 8
+#define SS_PIN 53
+#define RST_PIN 49
+#define led_PIN 10
 MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance.
-LiquidCrystal lcd(1, 2, 4, 5, 6, 7); // Creates an LC object. Parameters: (rs, enable, d4, d5, d6, d7) 
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // Creates an LC object. Parameters: (rs, enable, d4, d5, d6, d7) 
 
 void setup() {
-  lcd.begin(16,1);// Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display }
-  lcd.write("hello world!");
+  lcd.begin(16,2);// Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display }
+  //lcd.write("hello world!");
   Serial.begin(9600); // Initialize serial communications with the PC
   SPI.begin();      // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
@@ -51,6 +51,8 @@ void setup() {
 }
 
 void loop() {
+
+  digitalWrite(led_PIN, HIGH);
   
 
   // Look for new cards
@@ -63,10 +65,6 @@ void loop() {
     return;
   }
 
-  digitalWrite(led_PIN, HIGH);
-  delay(3000);
-  digitalWrite(led_PIN, LOW);
-  Serial.println("Been here, done this...");
   
   // Dump debug info about the card. PICC_HaltA() is automatically called.
  mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
@@ -83,10 +81,34 @@ if (mfrc522.uid.uidByte[0] == 0x04 &&
 
 Serial.println("Hi Mischa");
 lcd.clear();
-lcd.blink();
+//lcd.blink();
 delay(500);
 lcd.print("Hi Mischa");
 delay(500);
+
+digitalWrite(led_PIN, LOW);
+  delay(10000);
+  digitalWrite(led_PIN, HIGH);
+  Serial.println("Been here, done this...");
+  }
+
+if (mfrc522.uid.uidByte[0] == 0x69 &&
+     mfrc522.uid.uidByte[1] == 0x8A &&
+     mfrc522.uid.uidByte[2] == 0x6D &&
+     mfrc522.uid.uidByte[3] == 0x37 
+     ) {
+
+Serial.println("Hi Fanny");
+lcd.clear();
+//lcd.blink();
+delay(500);
+lcd.print("Hi Fanny");
+delay(500);
+
+digitalWrite(led_PIN, LOW);
+  delay(10000);
+  digitalWrite(led_PIN, HIGH);
+  Serial.println("Been here, done this...");
   }
 
 if (mfrc522.uid.uidByte[0] == 0x56 &&
@@ -96,10 +118,15 @@ if (mfrc522.uid.uidByte[0] == 0x56 &&
    ) {
 Serial.println("Hi Alex");
 lcd.clear();
-lcd.blink();
+//lcd.blink();
 delay(500);
 lcd.write("Hi Alex");
 delay(500);
+
+digitalWrite(led_PIN, LOW);
+  delay(10000);
+  digitalWrite(led_PIN, HIGH);
+  Serial.println("Been here, done this...");
   }
  
 }
