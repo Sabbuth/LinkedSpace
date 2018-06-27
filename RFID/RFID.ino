@@ -50,11 +50,11 @@
 #define zange 0.415
 #define schraubenzieher 0.283
 #define schere 0.028
-#define gesamtgewicht1 2.079
-#define bohrmaschine 0.956
-#define hammer 0.386
-#define bohraufsaetze 0.182
-#define kiste 0.555
+#define gesamtgewicht1 2.074
+#define bohrmaschine 0.958
+#define hammer 0.394
+#define bohraufsaetze 0.189
+#define kiste 0.563
 #define gesamtgewicht2 0.726
 #define nullGewicht1 0.004
 
@@ -66,7 +66,7 @@ HX711 scale_1(DOUT, CLK);
 HX711 scale_2(DOUT_2, CLK_2);
  
 //Change this calibration factor as per your load cell once it is found you many need to vary it in thousands
-float calibration_factor1 = -98000; //-106600 worked for my 40Kg max scale setup 
+float calibration_factor1 = -99060; //-106600 worked for my 40Kg max scale setup 
 float calibration_factor2 = -2146150;
 
 float LastWeight1;
@@ -85,34 +85,26 @@ void setup() {
 
 
   //Setup Last weights
-  LastWeight1= 2.079;
-  LastWeight2= 0.726;
+  LastWeight1= gesamtgewicht1;
+  LastWeight2= 0.730;
   lcd.begin(16,2);// Initializes the interface to the LCD screen, and specifies the dimensions (width and height) of the display }
-  //lcd.write("Linked Space FTW!");
   Serial.begin(9600); // Initialize serial communications with the PC
   SPI.begin();      // Init SPI bus
   mfrc522.PCD_Init(); // Init MFRC522 card
   Serial.println("Scan PICC to see UID and type...");
   pinMode ( led_PIN, OUTPUT);
   pinMode (PinCheckOpenShelf, INPUT);
-  //digitalWrite(PinCheckOpenShelf, LOW);
   
-
-
-  
-  scale_1.set_scale(calibration_factor1);
-  scale_2.set_scale(calibration_factor2);
-//  scale_1.set_scale(calibration_factor1); //Adjust to this calibration factor
-//  scale_2.set_scale(calibration_factor2); //Adjust to this calibration factor
+  scale_1.set_scale(calibration_factor1); //Adjust upper scale to this calibration factor
+  scale_2.set_scale(calibration_factor2);//Adjust lower scale to this calibration factor
   scale_1.tare();
   scale_2.tare();//Reset the scale to 0
   lcd.print("Linked Space FTW!");
  
   long zero_factor1 = scale_1.read_average(); //Get a baseline reading
   long zero_factor2 = scale_2.read_average();
-  
 
-  digitalWrite(led_PIN, HIGH);
+  digitalWrite(led_PIN, HIGH); //schließe Tür
 }
 
 bool intervalMeasure(float currentWeight, float referenceWeight ) {
@@ -128,22 +120,20 @@ bool intervalMeasure(float currentWeight, float referenceWeight ) {
 
 void loop() {
   String currentUser ="";
-  //digitalWrite(led_PIN, HIGH);
   scale_1.set_scale(calibration_factor1); //Adjust to this calibration factor
   scale_2.set_scale(calibration_factor2); //Adjust to this calibration factor
-  Serial.println(scale_1.get_units(), 3);
-  Serial.println(scale_2.get_units(), 3);
+  //Serial.println(scale_1.get_units(), 3);
+  //Serial.println(scale_2.get_units(), 3);
   delay(1000);
 
-val= digitalRead(PinCheckOpenShelf);
-if (val==1){
-  Serial.println("Works");
-}
+//val= digitalRead(PinCheckOpenShelf);
+//if (val==1){
+//  Serial.println("Works");
+
 
   
   // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) {
-    
+  if ( ! mfrc522.PICC_IsNewCardPresent()) { 
     return;
   }
 
@@ -151,8 +141,6 @@ if (val==1){
   if ( ! mfrc522.PICC_ReadCardSerial()) {
     return;
   }
-
-
 
 if (mfrc522.uid.uidByte[0] == 0x04 &&
      mfrc522.uid.uidByte[1] == 0x6D &&
@@ -173,12 +161,6 @@ if (mfrc522.uid.uidByte[0] == 0x69 &&
      ) {
 
 currentUser="Fanny";
-
-Serial.println("Hi " + currentUser);
-delay(1000);
-lcd.setCursor(0,0);
-lcd.print("Hi " + currentUser);
-delay(1000);
   }
 
 if (mfrc522.uid.uidByte[0] == 0x56 &&
@@ -188,10 +170,8 @@ if (mfrc522.uid.uidByte[0] == 0x56 &&
    ) {
   currentUser="Alex";
   }
-//scale_1.get_units();
 
-
-
+//sobald jmd aufgeschlossen hat, sage "hi"
 while(currentUser!="") {
  
  lcd.setCursor(0,0);
@@ -201,16 +181,15 @@ while(currentUser!="") {
  delay(1000);
   digitalWrite(led_PIN, LOW);
   delay(3000);
-  //lcd.clear();
-  //lcd.setCursor(0,0);
-  //lcd.print("xxxxxxxxxxxxxxxxxxxx");
   Serial.println("Tür offen");
   
   //ÄNDERUNG AUF PLATTE 1  
       // Look for new cards
       schlossoffen=digitalRead(led_PIN);
+      
       while(schlossoffen == LOW){ // solange das Schloss offen ist, in der While schleife bleiben
-        
+          delay(500); //kurz warten, damit evtl. Ruckler auf den Gewichtsplatten nicht als Differenz wahrgenommen werden
+          
           //Gewicht Kiste 1 ungleich dem zuletzt gemessenen Wert
           if( not(intervalMeasure(scale_1.get_units(), LastWeight1))) {
          
@@ -225,20 +204,17 @@ while(currentUser!="") {
                     //wenn Gewicht gleich dem ursprünglichen Gesamtgewicht entspricht, dann ist die Kiste vollständig --> passt
                     
                     if (intervalMeasure(scale_1.get_units(),gesamtgewicht1)==true){
-                          Serial.println("Kiste vollständig, danke für die Rückgabe");
+                          Serial.println("Kiste 1 vollständig, danke für die Rückgabe");
                           delay(1000);
                           LastWeight1 = scale_1.get_units();
                           delay(1000);
                           Serial.println("Bitte jetzt Tür schließen");
-                          //lcd.setCursor(0,0);
-                          //delay(1000);
-                          //lcd.print("Danke für die Rückgabe");
                      }
 
                      //wenn Gewicht != ursprungsgewicht, dann fehlen Teile der Kiste --> Aufforderung gesamte Kiste zurückzugeben
                      
                     else {
-                        Serial.println("Kiste unvollständig");
+                        Serial.println("Kiste 1 unvollständig");
                         difference = gesamtgewicht1 - scale_1.get_units();
                         for( int i = 0; i <4 ; i++){
                           if (intervalMeasure(difference,Objektliste1[i]) == true){
@@ -246,9 +222,6 @@ while(currentUser!="") {
                             Serial.println(objektnamen1[i] + "fehlt! Bitte nachlegen");
                             delay(500);
                             LastWeight1 = scale_1.get_units();
-                            break;
-                            //lcd.setCursor(0,0);
-                            //lcd.print(fehlendesObj + " fehlt");
                       }
           
                      }
@@ -257,9 +230,9 @@ while(currentUser!="") {
         
                }
 
-             //PLATTE 2: Box oder Tools ausleihen, wenn aktuelles Gewicht kleiner als letztes/ NUTZER MÖCHTE AUSLEIHEN
+             //Oberes Fach: Box oder Tools ausleihen, wenn aktuelles Gewicht kleiner als letztes/ NUTZER MÖCHTE AUSLEIHEN
              
-             if (scale_1.get_units()<(LastWeight2-0.09)){
+             if (scale_1.get_units()<(LastWeight1-0.09)){
 
                  Serial.println("User möchte ausleihen");
 
@@ -269,33 +242,28 @@ while(currentUser!="") {
                   Serial.println("Komplette Kiste 1 wurde entnommen");
                   delay(1000);
                   LastWeight1= scale_1.get_units();
-                  Serial.println("Bitte Tür jetzt schließen");
-                  //lcd.setCursor(0,0);
-                  //lcd.print("Kiste 1 entnommen");            
+                  Serial.println("Bitte Tür jetzt schließen");           
                  }
 
                  // wenn Gewicht nicht gleich null, dann wurde nicht die komplette Kiste entnommen --> Aufforderung gesamte Kiste zu entnehmen
                  else{
-                  Serial.println("Bitte vollständige Kiste entnehmen");
+                  Serial.println("Bitte vollständige Kiste 1 entnehmen");
                   delay(500);
                   LastWeight1= scale_1.get_units();
                   delay(1000);
-                 // lcd.setCursor(0,0);
-                 // lcd.print("Bitte gesamte Kiste entnehmen");
                  }
             
            }
       }
 
-      //Gewicht Kiste2 ungleich dem zuletzt gemessenen Wert
-          if( not(intervalMeasure(scale_2.get_units(), LastWeight2))) {
+          if( not(intervalMeasure(scale_2.get_units(), LastWeight2))) {       //Gewicht Kiste2 = unteres Fach ungleich dem zuletzt gemessenen Wert
          
-          Serial.println("Gwicht unteres Fach hat sich verändert");
+          Serial.println("Gewicht unteres Fach hat sich verändert");
           
               //Zurücklegen
               if (scale_2.get_units()>(LastWeight2+0.05)){
                     delay(500);
-                    Serial.println("User gibt etwas zurückgeben");
+                    Serial.println("User möchte etwas zurückgeben");
                     delay(500);
 
                     //wenn Gewicht gleich dem ursprünglichen Gesamtgewicht entspricht, dann ist die Kiste vollständig --> passt
@@ -306,16 +274,12 @@ while(currentUser!="") {
                           LastWeight2 = scale_2.get_units();
                           delay(1000);
                           Serial.println("Bitte jetzt Tür schließen");
-                          break;
-                          //lcd.setCursor(0,0);
-                          //delay(1000);
-                          //lcd.print("Danke für die Rückgabe");
                      }
 
                      //wenn Gewicht != ursprungsgewicht, dann fehlen Teile der Kiste --> Aufforderung gesamte Kiste zurückzugeben
                      
                     else {
-                        Serial.println("Kiste unvollständig");
+                        Serial.println("Kiste 2 unvollständig");
                         difference = gesamtgewicht2 - scale_2.get_units();
                         for( int i = 0; i <4 ; i++){
                           if (intervalMeasure(difference,Objektliste2[i]) == true){
@@ -323,9 +287,6 @@ while(currentUser!="") {
                             Serial.println(objektnamen2[i] + "fehlt! Bitte nachlegen");
                             delay(500);
                             LastWeight2 = scale_2.get_units();
-                            break;
-                            //lcd.setCursor(0,0);
-                            //lcd.print(fehlendesObj + " fehlt");
                       }
           
                      }
@@ -344,24 +305,17 @@ while(currentUser!="") {
                   
                  if ( intervalMeasure(scale_2.get_units(),0)== true){
                   Serial.println("Komplette Kiste 2 wurde entnommen");
-                  lcd.setCursor(0,0);
-                  lcd.print("Komplette Kiste 2 entnommen" );
                   delay(1000);
-                  LastWeight1= scale_2.get_units();
-                  Serial.println("Bitte Tür jetzt schließen");
-                  //lcd.setCursor(0,0);
-                  //lcd.print("Kiste 1 entnommen");            
+                  LastWeight2= scale_2.get_units();
+                  Serial.println("Bitte Tür jetzt schließen");       
                  }
 
                  // wenn Gewicht nicht gleich null, dann wurde nicht die komplette Kiste entnommen --> Aufforderung gesamte Kiste zu entnehmen
                  else{
-                  Serial.println("Bitte vollständige Kiste entnehmen");
+                  Serial.println("Bitte vollständige Kiste 2 entnehmen");
                   delay(500);
                   LastWeight2= scale_2.get_units();
                   delay(1000);
-                  break;
-                 // lcd.setCursor(0,0);
-                 // lcd.print("Bitte gesamte Kiste entnehmen");
                  }
             
            }
@@ -386,9 +340,6 @@ while(currentUser!="") {
       if ( ! mfrc522.PICC_ReadCardSerial()) {
         return;
       }
-
-      
-  //ÄNDERUNG AUF PLATTE 2    
 
   
 }
